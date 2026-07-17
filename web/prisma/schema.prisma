@@ -1,0 +1,165 @@
+// Prisma schema — платформа курсов по стрельбе
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EnrollmentStatus {
+  pending_payment
+  paid
+  in_progress
+  completed
+}
+
+enum PaymentStatus {
+  created
+  success
+  failed
+}
+
+model User {
+  id          String       @id @default(cuid())
+  fullName    String
+  email       String
+  phone       String
+  tgUsername  String?
+  tgChatId    String?       @unique
+  linkToken   String?       @unique // одноразовый токен для привязки Telegram
+  locale      String       @default("uk")
+  createdAt   DateTime     @default(now())
+  enrollments Enrollment[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Course {
+  id          String              @id @default(cuid())
+  slug        String              @unique
+  titleUa     String
+  titleEn     String
+  shortDescUa String
+  shortDescEn String
+  fullDescUa  String
+  fullDescEn  String
+  price       Int // грн
+  currency    String              @default("UAH")
+  duration    String
+  level       String              @default("beginner")
+  category    String              @default("") // платформа/зброя, напр. "AR-15 16\" Карабін"
+  categoryEn  String              @default("")
+  categoryOrder Int               @default(0)
+  syllabus    Json // [{ titleUa, titleEn, items: [{ua,en}] }]
+  coverImage  String?
+  isActive    Boolean             @default(true)
+  sortOrder   Int                 @default(0)
+  instructors CourseInstructor[]
+  enrollments Enrollment[]
+
+  @@map("courses")
+}
+
+model Instructor {
+  id             String             @id @default(cuid())
+  fullName       String
+  photo          String?
+  bioUa          String
+  bioEn          String
+  credentialsUa  String
+  credentialsEn  String
+  specialization String[] // слаги курсов
+  isActive       Boolean            @default(true)
+  courses        CourseInstructor[]
+  enrollments    Enrollment[]
+
+  @@map("instructors")
+}
+
+model CourseInstructor {
+  courseId     String
+  instructorId String
+  course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor   Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, instructorId])
+  @@map("course_instructors")
+}
+
+model Enrollment {
+  id           String           @id @default(cuid())
+  userId       String
+  courseId     String
+  instructorId String?
+  status       EnrollmentStatus @default(pending_payment)
+  createdAt    DateTime         @default(now())
+  completedAt  DateTime?
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course       Course           @relation(fields: [courseId], references: [id])
+  instructor   Instructor?      @relation(fields: [instructorId], references: [id])
+  payments     Payment[]
+  certificate  Certificate?
+
+  @@index([userId])
+  @@map("enrollments")
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  enrollmentId String
+  provider     String        @default("monobank")
+  method       String        @default("jar") // jar | acquiring
+  amount       Int
+  currency     String        @default("UAH")
+  ref          String? // invoiceId либо ссылка на банку / комментарий
+  status       PaymentStatus @default(created)
+  rawPayload   Json?
+  createdAt    DateTime      @default(now())
+  enrollment   Enrollment    @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId])
+  @@map("payments")
+}
+
+model Certificate {
+  id             String     @id @default(cuid())
+  enrollmentId   String     @unique
+  certNumber     String     @unique
+  holderFullName String
+  courseTitle    String
+  instructorName String
+  qrToken        String     @unique // постоянный токен для QR/ссылки
+  issuedAt       DateTime   @default(now())
+  enrollment     Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  sessions       CertEphemeralSession[]
+
+  @@map("certificates")
+}
+
+model CertEphemeralSession {
+  id            String      @id @default(cuid())
+  certificateId String
+  sessionToken  String      @unique
+  createdAt     DateTime    @default(now())
+  expiresAt     DateTime
+  certificate   Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("cert_ephemeral_sessions")
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  phone     String
+  name      String?
+  source    String   @default("hero") // звідки заявка
+  locale    String   @default("uk")
+  notified  Boolean  @default(false) // чи надіслано в бот ADMIN
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("leads")
+}
