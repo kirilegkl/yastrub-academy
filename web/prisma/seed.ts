@@ -75,7 +75,7 @@ const catalog: Category[] = [
         titleEn: "AR-15 — Basic Training",
         level: "beginner",
         duration: "3 дні",
-        price: 3500,
+        price: 1200,
         summaryUa: "Базовий повний курс: від будови AR-15 до бойової перезарядки, нічної та багатоцільової стрільби.",
         instructors: ["kovalenko", "shevchenko"],
         items: [
@@ -99,7 +99,7 @@ const catalog: Category[] = [
         titleEn: "AR-15 — Home Defense",
         level: "intermediate",
         duration: "2 дні",
-        price: 3800,
+        price: 1400,
         summaryUa: "Конфігурація та тактика застосування карабіна для захисту домівки.",
         instructors: ["kovalenko", "shevchenko"],
         items: [
@@ -121,7 +121,7 @@ const catalog: Category[] = [
         titleEn: "AR-15 — Speed Shooting",
         level: "intermediate",
         duration: "2 дні",
-        price: 5000,
+        price: 3900,
         summaryUa:
           "Швидкісні техніки роботи з карабіном: спліт, дабл-тап, вскидка, перенос вогню, стрільба по рухомій цілі.",
         instructors: ["shevchenko", "kovalenko"],
