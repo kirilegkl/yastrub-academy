@@ -2,6 +2,16 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// ── ТИМЧАСОВЕ ПРИХОВУВАННЯ КУРСІВ ────────────────────────────
+// Щоб знову показати ВСІ курси — постав SHOW_ALL = true (і `npm run seed`).
+// Поки SHOW_ALL = false, активні лише курси зі списку VISIBLE_SLUGS.
+const SHOW_ALL = false;
+const VISIBLE_SLUGS = new Set<string>([
+  "ar15-16-zero-to-fighter", // AR-15 — Базова підготовка
+  "ar15-16-home-defense", // AR-15 — Захист оселі
+  "ar15-16-team", // AR-15 — Швидкісна стрільба
+]);
+
 // ── Інструктори ─────────────────────────────────────────────
 const instructors = [
   {
@@ -766,7 +776,7 @@ async function main() {
         categoryOrder: category.order,
         coverImage: `/courses/${c.slug}.jpg`,
         syllabus,
-        isActive: true,
+        isActive: SHOW_ALL || VISIBLE_SLUGS.has(c.slug),
         sortOrder: sort,
       };
 
