@@ -66,11 +66,15 @@ model Course {
 model Instructor {
   id             String             @id @default(cuid())
   fullName       String
+  nickname       String? // позивний, напр. «Єгер»
   photo          String?
   bioUa          String
   bioEn          String
   credentialsUa  String
   credentialsEn  String
+  resumeUa       String             @default("") // розгорнуте резюме для сторінки інструктора
+  resumeEn       String             @default("")
+  videos         String[]           @default([]) // посилання на відео (YouTube або /videos/*.mp4)
   specialization String[] // слаги курсов
   isActive       Boolean            @default(true)
   courses        CourseInstructor[]

@@ -36,11 +36,15 @@ async function getCourses(): Promise<CourseDTO[]> {
       .map((ci: (typeof c.instructors)[number]) => ({
         id: ci.instructor.id,
         fullName: ci.instructor.fullName,
+        nickname: ci.instructor.nickname,
         photo: ci.instructor.photo,
         bioUa: ci.instructor.bioUa,
         bioEn: ci.instructor.bioEn,
         credentialsUa: ci.instructor.credentialsUa,
         credentialsEn: ci.instructor.credentialsEn,
+        resumeUa: ci.instructor.resumeUa,
+        resumeEn: ci.instructor.resumeEn,
+        videos: ci.instructor.videos,
         specialization: ci.instructor.specialization,
       })),
   }));

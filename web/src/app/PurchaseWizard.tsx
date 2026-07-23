@@ -26,7 +26,8 @@ export default function PurchaseWizard({
   dbError: boolean;
 }) {
   const { t, locale, toggle } = useI18n();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
+  const [flowOpen, setFlowOpen] = useState(false);
   const [courseId, setCourseId] = useState<string | null>(null);
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<number | null>(0);
@@ -61,9 +62,30 @@ export default function PurchaseWizard({
   const bio = (i: InstructorDTO) => (locale === "en" ? i.bioEn : i.bioUa);
   const creds = (i: InstructorDTO) => (locale === "en" ? i.credentialsEn : i.credentialsUa);
 
+  // Перехід між кроками усередині модалки — БЕЗ прокрутки сторінки,
+  // щоб позиція каталогу зберігалась такою, якою вона була в момент кліку «Обрати».
   function goStep(n: number) {
     setStep(n);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function openFlow(cId: string) {
+    setCourseId(cId);
+    setInstructorId(null);
+    setStep(2);
+    setPhase("form");
+    setError(null);
+    setResult(null);
+    setFlowOpen(true);
+  }
+
+  function closeFlow() {
+    setFlowOpen(false);
+  }
+
+  function scrollToCatalog() {
+    if (typeof window !== "undefined") {
+      document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   async function submit() {
@@ -118,7 +140,7 @@ export default function PurchaseWizard({
       <header className="sticky top-0 z-20 border-b border-ink-line/70 bg-ink-bg/80 backdrop-blur">
         <div className="mx-auto max-w-6xl px-5 h-14 flex items-center justify-between">
           <button
-            onClick={() => goStep(1)}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="font-display text-xs md:text-sm tracking-brand text-ink-text hover:text-ink-accent transition-colors text-left"
           >
             {[t.hero_pre, t.hero_brand, t.hero_post].filter(Boolean).join(" ")}
@@ -178,7 +200,7 @@ export default function PurchaseWizard({
           </p>
 
           <div className="mt-7">
-            <button className="btn px-7 py-3 text-base" onClick={() => goStep(1)}>
+            <button className="btn px-7 py-3 text-base" onClick={scrollToCatalog}>
               {t.choose} →
             </button>
           </div>
@@ -195,31 +217,8 @@ export default function PurchaseWizard({
           </div>
         )}
 
-        {/* Stepper */}
-        <nav className="mb-8 flex flex-wrap gap-2">
-          {steps.map((label, i) => {
-            const active = step === i + 1;
-            const done = step > i + 1;
-            return (
-              <span
-                key={i}
-                className={`chip px-3.5 py-1.5 text-xs font-medium ${
-                  active
-                    ? "border-ink-accent text-ink-accent bg-ink-accentSoft"
-                    : done
-                    ? "text-ink-muted border-ink-line2"
-                    : "text-ink-muted/60"
-                }`}
-              >
-                {label}
-              </span>
-            );
-          })}
-        </nav>
-
-        {/* STEP 1 — courses grouped by weapon platform */}
-        {step === 1 && (
-          <div className="space-y-12">
+        {/* Каталог курсів — завжди на сторінці (позиція прокрутки зберігається) */}
+        <div id="catalog" className="space-y-12">
             {grouped.map((g) => (
               <section key={g.ua}>
                 <div className="flex items-center gap-3 mb-5">
@@ -278,11 +277,7 @@ export default function PurchaseWizard({
                         </div>
                         <button
                           className="btn px-5 py-2.5 text-sm"
-                          onClick={() => {
-                            setCourseId(c.id);
-                            setInstructorId(null);
-                            goStep(2);
-                          }}
+                          onClick={() => openFlow(c.id)}
                         >
                           {t.choose}
                         </button>
@@ -293,45 +288,110 @@ export default function PurchaseWizard({
               </section>
             ))}
           </div>
-        )}
 
-        {/* STEP 2 — instructors */}
-        {step === 2 && course && (
-          <section>
-            <h2 className="font-display text-2xl font-bold mb-1">{t.instructors_for}</h2>
-            <p className="text-sm text-ink-muted mb-6">{title(course)}</p>
-            <div className="grid gap-5 md:grid-cols-2">
-              {course.instructors.map((i) => (
-                <button
-                  key={i.id}
-                  onClick={() => {
-                    setInstructorId(i.id);
-                    goStep(3);
-                  }}
-                  className={`card card-hover p-6 text-left ${
-                    instructorId === i.id ? "card-selected" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-ink-surface2 border border-ink-line grid place-items-center font-display font-bold text-ink-accent">
-                      {initials(i.fullName)}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-lg">{i.fullName}</div>
-                      <div className="text-sm text-ink-muted">{bio(i)}</div>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-sm text-ink-muted leading-relaxed">{creds(i)}</p>
-                </button>
-              ))}
-            </div>
-            <div className="mt-8">
-              <button className="btn-ghost px-5 py-2.5 text-sm" onClick={() => goStep(1)}>
-                ← {t.back}
+        {/* ── Модалка покупки: інструктор → програма → реєстрація ──
+            Відкривається поверх каталогу, тому позиція прокрутки зберігається. */}
+        {flowOpen && course && (
+          <div
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm px-4 py-6 md:py-10"
+            onClick={closeFlow}
+          >
+            <div
+              className="card relative w-full max-w-2xl p-6 md:p-8 my-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={closeFlow}
+                aria-label="Close"
+                className="absolute right-4 top-4 h-9 w-9 rounded-xl border border-ink-line text-ink-muted hover:text-ink-text hover:border-ink-line2 grid place-items-center text-xl leading-none"
+              >
+                ×
               </button>
-            </div>
-          </section>
-        )}
+
+              <nav className="mb-6 flex flex-wrap gap-2 pr-10">
+                {steps.slice(1).map((label, i) => {
+                  const n = i + 2;
+                  const active = step === n;
+                  const done = step > n;
+                  return (
+                    <span
+                      key={label}
+                      className={`chip px-3 py-1 text-[11px] font-medium ${
+                        active
+                          ? "border-ink-accent text-ink-accent bg-ink-accentSoft"
+                          : done
+                          ? "text-ink-muted border-ink-line2"
+                          : "text-ink-muted/60"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  );
+                })}
+              </nav>
+
+              {/* STEP 2 — instructors */}
+              {step === 2 && (
+                <section>
+                  <h2 className="font-display text-2xl font-bold mb-1">{t.instructors_for}</h2>
+                  <p className="text-sm text-ink-muted mb-6">{title(course)}</p>
+                  <div className="grid gap-5">
+                    {course.instructors.map((i) => (
+                      <div
+                        key={i.id}
+                        className={`card p-6 ${instructorId === i.id ? "card-selected" : ""}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="h-14 w-14 rounded-2xl bg-ink-surface2 border border-ink-line grid place-items-center font-display font-bold text-ink-accent overflow-hidden">
+                            {i.photo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={i.photo}
+                                alt={i.fullName}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              initials(i.fullName)
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-lg">{i.fullName}</div>
+                            <div className="text-sm text-ink-muted">{bio(i)}</div>
+                          </div>
+                        </div>
+                        <p className="mt-4 text-sm text-ink-muted leading-relaxed">{creds(i)}</p>
+                        <div className="mt-5 flex flex-col sm:flex-row gap-2.5">
+                          <button
+                            className="btn px-5 py-2.5 text-sm flex-1"
+                            onClick={() => {
+                              setInstructorId(i.id);
+                              goStep(3);
+                            }}
+                          >
+                            {t.choose}
+                          </button>
+                          <a
+                            href={`/instructor/${i.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-ghost px-5 py-2.5 text-sm text-center flex-1"
+                          >
+                            {t.instructor_more}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-8">
+                    <button className="btn-ghost px-5 py-2.5 text-sm" onClick={closeFlow}>
+                      ← {t.back}
+                    </button>
+                  </div>
+                </section>
+              )}
 
         {/* STEP 3 — syllabus */}
         {step === 3 && course && (
@@ -475,6 +535,9 @@ export default function PurchaseWizard({
               </>
             )}
           </section>
+        )}
+            </div>
+          </div>
         )}
 
         <footer className="mt-24 pt-6 border-t border-ink-line text-xs text-ink-muted flex items-center justify-between">

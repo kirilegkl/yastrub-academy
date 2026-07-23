@@ -7,11 +7,15 @@ export type SyllabusSection = {
 export type InstructorDTO = {
   id: string;
   fullName: string;
+  nickname: string | null;
   photo: string | null;
   bioUa: string;
   bioEn: string;
   credentialsUa: string;
   credentialsEn: string;
+  resumeUa: string;
+  resumeEn: string;
+  videos: string[];
   specialization: string[];
 };
 

@@ -17,3 +17,6 @@
 # misc
 **/*.log
 .DS_Store
+
+# ts incremental build info
+**/*.tsbuildinfo

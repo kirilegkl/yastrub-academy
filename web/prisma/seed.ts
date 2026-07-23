@@ -13,33 +13,23 @@ const VISIBLE_SLUGS = new Set<string>([
 ]);
 
 // ── Інструктори ─────────────────────────────────────────────
+// Наразі один інструктор — призначається на всі курси.
 const instructors = [
   {
-    key: "kovalenko",
-    fullName: "Андрій Коваленко",
-    bioUa: "Інструктор зі стрілецької підготовки, 12 років досвіду.",
-    bioEn: "Firearms instructor with 12 years of experience.",
-    credentialsUa: "Ветеран, сертифікований інструктор, підготовка підрозділів.",
-    credentialsEn: "Veteran, certified instructor, unit training.",
-    specialization: ["carbine", "pistol", "shotgun"],
-  },
-  {
-    key: "shevchenko",
-    fullName: "Ігор Шевченко",
-    bioUa: "Спеціаліст із тактичної та динамічної стрільби, CQB.",
-    bioEn: "Specialist in tactical and dynamic shooting, CQB.",
-    credentialsUa: "Досвід бойових дій, інструктор CQB, 9 років практики.",
-    credentialsEn: "Combat experience, CQB instructor, 9 years of practice.",
-    specialization: ["carbine", "cqb", "vehicle"],
-  },
-  {
-    key: "bondar",
-    fullName: "Оксана Бондар",
-    bioUa: "Снайпер-інструктор, високоточна стрільба та спостереження.",
-    bioEn: "Sniper instructor, precision shooting and observation.",
-    credentialsUa: "Снайперська підготовка, дальні дистанції, 10 років досвіду.",
-    credentialsEn: "Sniper training, long range, 10 years of experience.",
-    specialization: ["sniper", "marksman", "precision"],
+    key: "kirilo",
+    fullName: "Кирило «Єгер»",
+    nickname: "Єгер",
+    photo: "/instructors/kirilo.jpg",
+    bioUa: "Інструктор зі стрілецької та тактичної підготовки.",
+    bioEn: "Firearms and tactical training instructor.",
+    credentialsUa: "Карабін, високоточна стрільба, тактика, підготовка цивільних і підрозділів.",
+    credentialsEn: "Carbine, precision shooting, tactics, training for civilians and units.",
+    resumeUa:
+      "Кирило «Єгер» — інструктор зі стрілецької та тактичної підготовки з багаторічним практичним досвідом. Спеціалізація: робота з карабіном AR-платформи, високоточна стрільба, стрільба з нестійких положень, тактична медицина та підготовка до реальних сценаріїв. Проводить курси для цивільних і військових, від базового рівня до просунутого. Основний принцип — безпека, фундаментали та відпрацювання навичок до автоматизму.",
+    resumeEn:
+      "Kirilo «Yeger» is a firearms and tactical training instructor with years of hands-on experience. Focus: AR-platform carbine work, precision shooting, shooting from unstable positions, tactical medicine and real-scenario preparation. Trains civilians and military, from beginner to advanced. Core principle — safety, fundamentals and drilling skills to automaticity.",
+    videos: [] as string[], // додай посилання на відео пізніше (YouTube або /videos/*.mp4)
+    specialization: [],
   },
 ];
 
@@ -723,20 +713,30 @@ async function main() {
       where: { id: i.key },
       update: {
         fullName: i.fullName,
+        nickname: i.nickname,
+        photo: i.photo,
         bioUa: i.bioUa,
         bioEn: i.bioEn,
         credentialsUa: i.credentialsUa,
         credentialsEn: i.credentialsEn,
+        resumeUa: i.resumeUa,
+        resumeEn: i.resumeEn,
+        videos: i.videos,
         specialization: i.specialization,
         isActive: true,
       },
       create: {
         id: i.key,
         fullName: i.fullName,
+        nickname: i.nickname,
+        photo: i.photo,
         bioUa: i.bioUa,
         bioEn: i.bioEn,
         credentialsUa: i.credentialsUa,
         credentialsEn: i.credentialsEn,
+        resumeUa: i.resumeUa,
+        resumeEn: i.resumeEn,
+        videos: i.videos,
         specialization: i.specialization,
         isActive: true,
       },
@@ -787,8 +787,10 @@ async function main() {
       });
 
       await prisma.courseInstructor.deleteMany({ where: { courseId: course.id } });
-      for (const key of c.instructors) {
-        const instructorId = instructorIdByKey[key];
+      // Наразі один інструктор — призначаємо його на всі курси.
+      // (Поле c.instructors у каталозі залишено як історичне; ігноруємо його.)
+      for (const i of instructors) {
+        const instructorId = instructorIdByKey[i.key];
         if (instructorId) {
           await prisma.courseInstructor.create({
             data: { courseId: course.id, instructorId },
