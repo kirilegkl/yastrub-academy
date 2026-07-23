@@ -3,6 +3,7 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { prisma } from "@/lib/db";
 import { jarUrl, acquiringEnabled, createInvoice } from "@/lib/monobank";
+import { sendAdminTelegram } from "@/lib/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -124,6 +125,19 @@ export async function POST(req: Request) {
       status: "created",
     },
   });
+
+  // Лог у бот ADMIN: нова реєстрація на курс (не блокує відповідь клієнту).
+  const tgLine = normalizeTg(data.tgUsername);
+  void sendAdminTelegram(
+    `🎯 <b>Нова реєстрація на курс</b>\n` +
+      `Курс: <b>${course.titleUa}</b> — ${course.price} грн\n` +
+      `ПІБ: ${data.fullName}\n` +
+      `Телефон: ${data.phone}\n` +
+      `Email: ${data.email}\n` +
+      `Telegram: ${tgLine ? "@" + tgLine : "—"}\n` +
+      `Оплата: ${method}\n` +
+      `ID: ${enrollment.id}`
+  );
 
   return NextResponse.json({
     enrollmentId: enrollment.id,

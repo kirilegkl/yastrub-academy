@@ -18,6 +18,14 @@ function initials(name: string) {
     .join("");
 }
 
+// Пункт програми виду «Заголовок: опис» ділимо на заголовок (видно завжди)
+// та опис (розкривається). Якщо двокрапки немає — опису немає.
+function splitItem(text: string): { head: string; desc: string } {
+  const i = text.indexOf(":");
+  if (i === -1) return { head: text.trim(), desc: "" };
+  return { head: text.slice(0, i).trim(), desc: text.slice(i + 1).trim() };
+}
+
 export default function PurchaseWizard({
   courses,
   dbError,
@@ -31,6 +39,7 @@ export default function PurchaseWizard({
   const [courseId, setCourseId] = useState<string | null>(null);
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<number | null>(0);
+  const [openItem, setOpenItem] = useState<string | null>(null);
 
   const [phase, setPhase] = useState<"form" | "pay" | "done">("form");
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", tg: "", consent: false });
@@ -419,14 +428,46 @@ export default function PurchaseWizard({
                     </span>
                   </button>
                   {openSection === idx && (
-                    <ul className="px-5 pb-5 space-y-2 text-sm text-ink-muted">
-                      {sec.items.map((it, j) => (
-                        <li key={j} className="flex gap-2.5">
-                          <span className="text-ink-accent mt-0.5">▸</span>
-                          <span>{locale === "en" ? it.en : it.ua}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="px-4 pb-4 space-y-2">
+                      {sec.items.map((it, j) => {
+                        const raw = locale === "en" ? it.en : it.ua;
+                        const { head, desc } = splitItem(raw);
+                        const key = `${idx}-${j}`;
+                        const open = openItem === key;
+                        const hasDesc = desc.length > 0;
+                        return (
+                          <div
+                            key={j}
+                            className="rounded-xl border border-ink-line bg-ink-surface2/40 overflow-hidden"
+                          >
+                            <button
+                              type="button"
+                              className={`w-full px-4 py-3 flex items-start gap-2.5 text-left ${
+                                hasDesc ? "cursor-pointer" : "cursor-default"
+                              }`}
+                              onClick={() => hasDesc && setOpenItem(open ? null : key)}
+                            >
+                              <span className="text-ink-accent mt-0.5">▸</span>
+                              <span className="flex-1 text-sm text-ink-text">{head}</span>
+                              {hasDesc && (
+                                <span
+                                  className={`text-ink-accent text-lg leading-none transition-transform ${
+                                    open ? "rotate-45" : ""
+                                  }`}
+                                >
+                                  +
+                                </span>
+                              )}
+                            </button>
+                            {hasDesc && open && (
+                              <div className="px-4 pb-3 pl-9 text-sm text-ink-muted leading-relaxed">
+                                {desc}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               ))}
@@ -460,17 +501,20 @@ export default function PurchaseWizard({
                 <div className="card p-6 space-y-4">
                   <Field
                     label={t.full_name}
+                    required
                     value={form.fullName}
                     onChange={(v) => setForm({ ...form, fullName: v })}
                   />
                   <Field
                     label={t.email}
                     type="email"
+                    required
                     value={form.email}
                     onChange={(v) => setForm({ ...form, email: v })}
                   />
                   <Field
                     label={t.phone}
+                    required
                     value={form.phone}
                     onChange={(v) => setForm({ ...form, phone: v })}
                   />
@@ -487,7 +531,10 @@ export default function PurchaseWizard({
                       onChange={(e) => setForm({ ...form, consent: e.target.checked })}
                       className="mt-1 accent-[#F5B301]"
                     />
-                    <span>{t.consent}</span>
+                    <span>
+                      {t.consent}
+                      <span className="text-red-400"> *</span>
+                    </span>
                   </label>
 
                   {error && <div className="text-sm text-red-400">{error}</div>}
@@ -499,7 +546,9 @@ export default function PurchaseWizard({
                       <span className="text-sm text-ink-muted font-sans font-medium"> {t.uah}</span>
                     </div>
                     <button
-                      disabled={submitting || !form.fullName || !form.email || !form.phone}
+                      disabled={
+                        submitting || !form.fullName || !form.email || !form.phone || !form.consent
+                      }
                       className="btn px-7 py-2.5"
                       onClick={submit}
                     >
@@ -555,16 +604,21 @@ function Field({
   onChange,
   type = "text",
   placeholder,
+  required = false,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
   placeholder?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-ink-muted">{label}</span>
+      <span className="text-xs text-ink-muted">
+        {label}
+        {required && <span className="text-red-400"> *</span>}
+      </span>
       <input
         className="input mt-1.5 px-3.5 py-2.5 text-sm"
         type={type}
