@@ -59,8 +59,8 @@ export const dict = {
       "Відкрийте бота та натисніть Start — доступ до матеріалів прив'яжеться до вашого акаунту.",
     open_bot: "Відкрити Telegram-бот",
     done_title: "Готово!",
-    done_hint:
-      "Реєстрацію збережено. Після підтвердження оплати ви отримаєте доступ у боті. Після проходження курсу — сертифікат з QR.",
+    done_hint: "Після підтвердження оплати ви отримаєте доступ у боті.",
+    support: "Підтримка",
     err_generic: "Сталася помилка. Спробуйте ще раз.",
     err_consent: "Потрібна згода на обробку даних.",
     lang: "EN",
@@ -122,8 +122,8 @@ export const dict = {
     bot_hint: "Open the bot and tap Start — access to materials will bind to your account.",
     open_bot: "Open Telegram bot",
     done_title: "Done!",
-    done_hint:
-      "Your registration is saved. After payment confirmation you get access in the bot. On course completion — a certificate with QR.",
+    done_hint: "After payment confirmation you'll get access in the bot.",
+    support: "Support",
     err_generic: "Something went wrong. Please try again.",
     err_consent: "Data-processing consent is required.",
     lang: "UA",

@@ -567,10 +567,17 @@ export default function PurchaseWizard({
                 <h2 className="font-display text-2xl font-bold mb-2">{t.done_title}</h2>
                 <p className="text-sm text-ink-muted mb-5">{t.done_hint}</p>
                 <div className="card p-6 space-y-3">
-                  <div className="font-semibold">{t.bot_title}</div>
+                  <a
+                    href={result.botLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-ink-accent hover:underline"
+                  >
+                    {t.bot_title}
+                  </a>
                   <div className="text-sm text-ink-muted">{t.bot_hint}</div>
-                  <a href={result.botLink} target="_blank" rel="noopener noreferrer">
-                    <span className="btn w-full px-6 py-3.5">{t.open_bot}</span>
+                  <a href="https://t.me/kirilegkl" target="_blank" rel="noopener noreferrer">
+                    <span className="btn w-full px-6 py-3.5">{t.support}</span>
                   </a>
                   <a
                     href={result.jarUrl}
