@@ -55,8 +55,7 @@ export const dict = {
     open_jar: "Сплатити через банку monobank",
     paid_btn: "Я оплатив(ла)",
     bot_title: "Доступ через Telegram-бот",
-    bot_hint:
-      "Відкрийте бота та натисніть Start — доступ до матеріалів прив'яжеться до вашого акаунту.",
+    bot_hint: "Сертифікат по QR-коду буде доступний після проходження курсу.",
     open_bot: "Відкрити Telegram-бот",
     done_title: "Готово!",
     done_hint: "Після підтвердження оплати ви отримаєте доступ у боті.",
@@ -119,7 +118,7 @@ export const dict = {
     open_jar: "Pay via monobank jar",
     paid_btn: "I have paid",
     bot_title: "Access via Telegram bot",
-    bot_hint: "Open the bot and tap Start — access to materials will bind to your account.",
+    bot_hint: "Your QR-code certificate will be available after completing the course.",
     open_bot: "Open Telegram bot",
     done_title: "Done!",
     done_hint: "After payment confirmation you'll get access in the bot.",
